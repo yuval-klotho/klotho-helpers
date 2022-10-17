@@ -1,0 +1,25 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+creds_dir=pulumi_creds
+
+if [[ $# == 0 ]]; then
+  echo "Usage: $(basename "$0") <profile>"
+  echo
+  echo "Profile may be one of:"
+  echo
+  ls -1 "$creds_dir" | grep -v 'README\.md' | sed 's/^/• /'
+  echo
+  echo "To add a profile, create a file in $PWD/$creds_dir whose name is the profile name,"
+  echo "and whose contents are the Pulumi personal access token."
+else
+  creds_file="$creds_dir/$1"
+  if [[ ! -f "$creds_file" ]]; then
+    echo >&2 "No such file exists in $PWD/$creds_dir"
+    exit 1
+  fi
+  pulumi logout
+  export PULUMI_ACCESS_TOKEN="$(cat "$creds_file")"
+  pulumi login
+fi

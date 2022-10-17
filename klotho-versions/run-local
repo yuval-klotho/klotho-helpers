@@ -1,0 +1,27 @@
+#!/bin/bash
+set -euo pipefail
+
+repo_dir="$( cd "$(dirname "$0")" ; echo "$PWD/klotho-versions/local/dev")"
+
+if [[ -n "${KLOTHO_USE_SHOW_LINK-}" ]]; then
+  echo 'local/dev'
+  exit 0
+fi
+
+
+if [[ ! -d "$repo_dir" ]]; then
+  echo >&2 "The following does not exist, or is not a directory: $repo_dir"
+  echo >&2 ""
+  echo >&2 "It must be klotho repo, or a symlink to one. Run:"
+  echo >&2 ""
+  echo >&2 "  ln -s ~/path/to/your/klotho $repo_dir"
+  exit 1
+fi
+
+(
+printf ' Installing...\r'
+cd "$repo_dir"
+go install ./cmd/klotho
+printf '              \r'
+)
+$(go env GOPATH)/bin/klotho "$@"

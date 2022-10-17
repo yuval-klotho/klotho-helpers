@@ -1,0 +1,3 @@
+pulumi_creds/
+klotho-versions/release*
+klotho-versions/local/
