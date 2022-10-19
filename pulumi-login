@@ -13,6 +13,13 @@ if [[ $# == 0 ]]; then
   echo
   echo "To add a profile, create a file in $PWD/$creds_dir whose name is the profile name,"
   echo "and whose contents are the Pulumi personal access token."
+
+  me="$(2>/dev/null pulumi whoami || true)"
+  echo "$me"
+  if [[ -n "$me" ]]; then
+    echo
+    echo "Currently logged in as: $me"
+  fi
 else
   creds_file="$creds_dir/$1"
   if [[ ! -f "$creds_file" ]]; then
