@@ -64,8 +64,9 @@ else
   echo "name: $stack_name" > Pulumi.yaml
   echo "runtime: nodejs" >> Pulumi.yaml
   pulumi stack select "$full_stack"
-  #
-  # Tear down that wall!
+  
+  # Tear it down, if it had ever been deployed.
+  # (If it hasn't been, then `pulumi config refresh` will fail.)
   if pulumi config refresh ; then
     pulumi refresh
     pulumi down
