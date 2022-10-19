@@ -21,4 +21,10 @@ Future improvements could be to support multiple release versions, or multiple l
 
 Lets you easily switch your pulumi login creds. Useful if you have access to both a personal account and a team account.
 
+## pulumi-nuke
+
+`pulumi down`s a stack, and optionally `rm`s it, without you having to actually have the stack locally. You just give it a fully qualified stack name, and it does the rest.
+
+As a convenience, you can even just give it the URL to the ack at app.pululmi.com.
+
 [1]: https://github.com/klothoplatform/klotho

@@ -1,0 +1,81 @@
+#!/bin/bash
+set -euo pipefail
+
+function print_help() {
+  echo >&2 "$(basename "$0") <fully qualified stack>"
+  echo >&2
+  echo >&2 "Takes down the given stack, without you having to have it compiled or whatever locally."
+  echo >&2
+  echo >&2 "The stack argument must be of the format organization/project/stack or a URL in under https://app.pulumi.com. For example:"
+  echo >&2
+  echo >&2 "• $(basename "$0") myorg/myproject/mystack"
+  echo >&2 "• $(basename "$0") https://app.pulumi.com/myorg/myproject/mystack"
+}
+
+function prompt_yn() {
+  while true ; do
+    read -p "$@ " ANSWER
+    ANSWER="$(echo "$ANSWER" | tr A-Z a-z)" # lowercase it
+    if [[ "$ANSWER" == y || "$ANSWER" == yes ]]; then
+      return 0
+    elif [[ "$ANSWER" == n || "$ANSWER" == no ]]; then
+      return 1
+    else
+      echo "Didn't understand. Please answer \"yes\" or \"no\"."
+      # and then loop back
+    fi
+  done
+}
+
+if [[ $# -eq 0 ]]; then
+  print_help
+  exit 1
+else
+  # Parse the stack name
+  full_stack="$1"
+  full_stack="${full_stack#'https://app.pulumi.com/'}" # removes the prefix: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+  stack_slashes="$(echo "$full_stack" | sed 's/[^/]//g')"
+  if [[ "${#stack_slashes}" -ne 2 ]]; then
+    echo "Invalid stack. Invoke this script without any arguments to see the format"
+    exit 1
+  fi
+  stack_name="$(echo "$full_stack" | cut -d / -f 2)"
+  echo "See: https://app.pulumi.com/$full_stack/settings/options"
+
+  # Check AWS creds, to make sure we're logged in
+  printf >&2 'Confirming AWS credentials... '
+  set +e
+  &>/dev/null aws sts get-caller-identity
+  aws_sts_exit=$?
+  set -e
+  if [[ $aws_sts_exit -eq 0 ]]; then
+    printf >&2 'OK\n'
+  else
+    printf >&2 'ERROR\n'
+    echo >&2 "Couldn't verify AWS credentials. Are you authenticated in?"
+    return 1
+  fi
+  
+  # Create a tmp dir. cd into it, and put the stack yaml in
+  tmp_dir="$(mktemp -d)"
+  echo >&2 "Using temp dir: $tmp_dir"
+  cd "$tmp_dir"
+
+  echo "name: $stack_name" > Pulumi.yaml
+  echo "runtime: nodejs" >> Pulumi.yaml
+  pulumi stack select "$full_stack"
+  #
+  # Tear down that wall!
+  if pulumi config refresh ; then
+    pulumi refresh
+    pulumi down
+  fi
+  
+  echo
+  echo
+
+  if prompt_yn "rm the stack?" ; then
+    pulumi stack rm -s "$full_stack" --yes
+  fi
+fi
+
