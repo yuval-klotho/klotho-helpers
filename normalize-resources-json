@@ -1,0 +1,30 @@
+#!/usr/bin/python3
+import json
+
+def normalize(path: str):
+    with open(path) as f:
+        data = json.load(f)
+    sort_it(data)
+    with open(path, 'w') as f:
+        json.dump(data, f, indent=2, sort_keys=True)
+
+def sort_it(obj):
+    if isinstance(obj, list):
+        for e in obj:
+            sort_it(e)
+        obj.sort(key=str)
+    elif isinstance(obj, dict):
+        for v in obj.values():
+            sort_it(v)
+
+def stable_hash(obj):
+    if isinstance(dict, obj):
+        for v in obj.values():
+            entries = [stable_hash(e) for e in obj]
+            entries.sort(key=lambda e: e[0])
+        return str(entries)
+    else:
+        return str(obj)
+
+if __name__ == '__main__':
+    normalize('resources.json')
