@@ -19,9 +19,20 @@ if [[ ! -d "$repo_dir" ]]; then
 fi
 
 (
-printf ' Installing...\r'
 cd "$repo_dir"
+git_info="$(git log --pretty=format:'%h' -n 1)"
+if ! git diff --quiet ; then
+  git_info="$git_info (dirty)"
+fi
+if [[ -n "${ONLY_PRINT_GIT_INFO-}" ]]; then
+  echo >&2 "Version: local-$git_info"
+  exit
+fi
+
+printf 'Installing %s...\r' "$git_info"
 go install ./cmd/klotho
-printf '              \r'
+printf 'Using %s        \n' "$git_info"
 )
-$(go env GOPATH)/bin/klotho "$@"
+if [[ -z "${ONLY_PRINT_GIT_INFO-}" ]]; then
+  $(go env GOPATH)/bin/klotho "$@"
+fi

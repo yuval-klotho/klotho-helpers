@@ -11,6 +11,13 @@ function klotho_ln() {
 }
 
 case "${1:-which}" in
+  --version)
+    if [[ ! -e klotho ]]; then
+      echo "No klotho-which'ed klotho installed. See \"klotho-which help\""
+      exit 1
+    fi
+    ONLY_PRINT_GIT_INFO=true ./klotho --version 2>&1 >/dev/null | cut -d' ' -f2
+    ;;
   local/dev)
     klotho_ln run-local
     ;;
@@ -42,7 +49,9 @@ case "${1:-which}" in
     fi
     ;;
   help)
-    echo 'provide "local/dev" or "release [latest]"'
+    echo 'Provide "local/dev" or "release [latest]"'.
+    echo 'You can also use just --version (without the positional arg) to print the active'
+    echo "klotho's version, in a succinct format suitable for turning into file/dir paths."
     exit 1
     ;;
   *)
