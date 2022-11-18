@@ -1,4 +1,5 @@
-pulumi_creds/
-klotho-versions/release*
-klotho-versions/local/
 /klotho
+active-version.txt
+klotho-versions/local/
+klotho-versions/release*
+pulumi_creds/
