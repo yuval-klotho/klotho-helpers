@@ -6,8 +6,22 @@ versions_dir=klotho-versions
 mkdir -p "$versions_dir"
 
 function klotho_ln() {
+    klotho_path="$1"
+    klotho_desc="$2"
     rm -f klotho
-    ln -s "$versions_dir/$1" klotho 
+    if [[ "$klotho_path" == '/'* ]]; then
+      full_path="$klotho_path"
+    else
+      full_path="$versions_dir/$1"
+    fi
+    ln -s "$full_path" klotho 
+    echo "$klotho_desc" > active-version.txt
+}
+
+function klotho_version() {
+  klotho_cmd="${1:-./klotho}"
+  "$klotho_cmd" --version 2>&1 >/dev/null | cut -d' ' -f2
+
 }
 
 case "${1:-which}" in
@@ -16,10 +30,13 @@ case "${1:-which}" in
       echo "No klotho-which'ed klotho installed. See \"klotho-which help\""
       exit 1
     fi
-    ONLY_PRINT_GIT_INFO=true ./klotho --version 2>&1 >/dev/null | cut -d' ' -f2
+    ONLY_PRINT_GIT_INFO=true klotho_version
+    ;;
+  brew)
+    klotho_ln /opt/homebrew/bin/klotho brew
     ;;
   local/dev)
-    klotho_ln run-local
+    klotho_ln run-local local/dev
     ;;
   release)
     if [[ "${2:-}" == latest || ! -f "$versions_dir/release" ]]; then
@@ -30,19 +47,11 @@ case "${1:-which}" in
       printf 'OK\n'
       chmod +x "$versions_dir/release"
     fi
-    klotho_ln release
+    klotho_ln release "release ($(klotho_version "$versions_dir/release"))"
     ;;
   which)
-    if [[ -h klotho ]]; then
-      which_klotho="$(basename "$(stat -f %Y klotho)")"
-      if [[ "$which_klotho" == run-local ]]; then
-        KLOTHO_USE_SHOW_LINK=1 ./klotho
-      else
-        echo "$which_klotho"
-      fi
-    elif [[ -f klotho ]]; then
-      echo >&2 "$pwd/klotho (not a symlink)"
-      exit 2
+    if [[ -e active-version.txt ]]; then
+      cat active-version.txt
     else
       echo >&2 'klotho not set up'
       exit 1
