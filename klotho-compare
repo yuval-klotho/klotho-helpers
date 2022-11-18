@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+helper_home="$(dirname "$0")"
+klotho_which="$helper_home/klotho-which"
+
+previous_version="$("$klotho_which")"
+
+for klotho_vers in release local/dev ; do
+  echo >&2 "Compiling using $klotho_vers"
+  "$klotho_which" "$klotho_vers"
+  dir_name="compiled-$("$klotho_which" --version)"
+  klotho "$@" -o "$dir_name"
+  (cd "$dir_name" && "$helper_home/normalize-resources-json")
+done
+
+"$klotho_which" "$previous_version"
+
