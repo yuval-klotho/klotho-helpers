@@ -30,6 +30,7 @@ if [[ -n "${ONLY_PRINT_GIT_INFO-}" ]]; then
 fi
 
 printf 'Installing %s...\r' "$git_info"
+go generate ./... &>/dev/null
 go install ./cmd/klotho
 printf 'Using %s        \n' "$git_info"
 )
